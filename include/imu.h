@@ -11,6 +11,7 @@ typedef struct //陀螺仪有关数据结构体
     int16_t adc_z;
 } IMU_data_Typedef;
 extern IMU_data_Typedef acceldata, gyrodata;
+void IMU_ReadPin(void *point);
 // float Gyro_x_Data_Filter();  
 
 #endif

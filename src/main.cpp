@@ -8,8 +8,15 @@ void setup()
 {
       // put your setup code here, to run once:
     m5.begin();
-    xTaskCreate(IMU_ReadPin,"read_pin",4096,NULL,1024,NULL);
-    xTaskCreate(Show_Oled,"oled_show",1024,NULL,3,NULL);
+    // for(int i = 0 ; i < 240 ; i +=4)
+    // {
+    //     for (int j = 0 ; j < 135; j ++)
+    //     {
+    //         m5.Lcd.drawPixel(j,i,RED);
+    //     }
+    // }
+    xTaskCreatePinnedToCore(IMU_ReadPin,"read_pin",4096,NULL,1024,NULL,0);
+    xTaskCreatePinnedToCore(Show_Oled,"oled_show",1024*10,NULL,3,NULL,1);//使用CPU1刷屏
     pinMode(10, OUTPUT);    //初始化灯
     pinMode(37,INPUT_PULLUP);
     digitalWrite(10, HIGH); //设置为高电平

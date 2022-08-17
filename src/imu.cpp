@@ -1,7 +1,7 @@
 #include "imu.h"
 IMU_data_Typedef acceldata, gyrodata;
 
-
+#define rate 100
 void IMU_ReadPin(void *point)
 {
     if (m5.Imu.Init() != 0)
@@ -16,24 +16,24 @@ void IMU_ReadPin(void *point)
     {
         M5.Imu.getGyroData(&acceldata.x,&acceldata.y,&acceldata.z);//读取加速度计
         message = 'E';
-        if(acceldata.x > 200)
+        if(acceldata.x > rate)
         {
-            Serial.printf("up\n");
+            // Serial.printf("up\n");
             message = 'U';
         }
-        if(acceldata.x < -200)
+        if(acceldata.x < -rate)
         {
-            Serial.printf("down\n");
+            // Serial.printf("down\n");
             message = 'D';
         }
-        if(acceldata.z > 200)
+        if(acceldata.z > rate)
         {
-            Serial.printf("left\n");
+            // Serial.printf("left\n");
             message = 'L';
         }
-        if(acceldata.z < -200)
+        if(acceldata.z < -rate)
         {
-            Serial.printf("right\n");
+            // Serial.printf("right\n");
             message = 'R';
         }
         // Serial.printf("{acceldatax:%f},{acceldatay:%f},{acceldataz:%f}",acceldata.x,acceldata.y,acceldata.z);

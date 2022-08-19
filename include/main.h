@@ -12,4 +12,5 @@
 #define tft_y 240
 
 extern QueueHandle_t IMU_Btn_Queue;//创建一个队列,长度4，大小20
+extern TimerHandle_t ball_down_timer;
 #endif

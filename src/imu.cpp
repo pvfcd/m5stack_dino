@@ -2,6 +2,11 @@
 IMU_data_Typedef acceldata, gyrodata;
 
 #define rate 100
+/**
+ * @brief 读取陀螺仪线程
+ * 
+ * @param point 
+ */
 void IMU_ReadPin(void *point)
 {
     if (m5.Imu.Init() != 0)
@@ -34,7 +39,7 @@ void IMU_ReadPin(void *point)
         if(acceldata.z < -rate)
         {
             // Serial.printf("right\n");
-            message = 'R';
+            // message = 'R';
         }
         // Serial.printf("{acceldatax:%f},{acceldatay:%f},{acceldataz:%f}",acceldata.x,acceldata.y,acceldata.z);
         if(message != 'E')
@@ -45,4 +50,3 @@ void IMU_ReadPin(void *point)
         vTaskDelay(pdMS_TO_TICKS(100));
     }
 }
-

@@ -3,14 +3,12 @@
 #include "math.h"
 #define space 60
 #define obstruct_value 40
+#define gravity
 
 uint8_t obstruct[obstruct_value];
 uint8_t space_arr[obstruct_value];
-static uint8_t gravity_movement[] = {100, 99, 93, 83, 69, 51,29,3}; //用excel根据公式x = 1/2at^2计算得出计算出的符合重力加速度的运动轨迹
-typedef struct
-{
-    uint8_t obstruct_posi;
-} crush_detect_typedef;
+
+static uint8_t gravity_movement[] = {19, 19, 36, 51, 64, 75, 84, 91, 96, 99, 100, 99, 96, 91, 84, 75, 64, 51, 36, 19, 19}; //符合重力加速度的运动轨迹
 
 crush_detect_typedef crush_detect; //碰撞检测有关变量
 /**
@@ -20,38 +18,65 @@ crush_detect_typedef crush_detect; //碰撞检测有关变量
  */
 void Show_Oled(void *point)
 {
-
-    uint16_t background_y_posi = 0;
+    pinMode(26, INPUT);
     randomSeed(analogRead(26));
-    for (uint8_t i = 0; i < obstruct_value; i++)
-    {
-        obstruct[i] = random(50, 100);
-        space_arr[i] = random(80, 100);
-    }
+    uint8_t start_rand_obstruct = 1;
+    obstruct_typedef obstruct[2];
+    obstruct[0].delay = 0;               //第一个障碍物不延迟直接生成
+    obstruct[0].height = random(40, 80); //高度自定义
+    obstruct[0].enable = 1;
+    obstruct[1].start_time = 0;
     m5.Lcd.begin();
+    obstruct[0].start_time = xTaskGetTickCount(); //记录一个开始时间
     for (;;)
     {
         //障碍物移动
-        background_y_posi++; //控制障碍物左移的变量
-        for (uint8_t i = 0; i < obstruct_value; i++)
+        if (xTaskGetTickCount() - obstruct[0].start_time >= obstruct[0].delay || obstruct[0].enable == 1)
         {
-            m5.Lcd.drawLine(tft_x, background_y_posi - i * space_arr[i], obstruct[i], background_y_posi - i * space_arr[i], PURPLE);
-            m5.Lcd.drawLine(tft_x, background_y_posi - i * space_arr[i] - 1, obstruct[i], background_y_posi - i * space_arr[i] - 1, BLACK);
-            if ((background_y_posi - i * space_arr[i]) > 200)
-            {
-                crush_detect.obstruct_posi = background_y_posi - i * space_arr[i];
-            }
+            obstruct[0].posi+=2;
+            obstruct[0].enable = 1;
         }
-        //重新生成地图
-        if (background_y_posi > (space + obstruct_value) * 10)
+        if (obstruct[0].posi > 200&& obstruct[1].start_time == 0)
         {
-            background_y_posi = 0;
-            for (uint8_t i = 0; i < obstruct_value; i++)
-            {
-                obstruct[i] = random(50, 100);
-                space_arr[obstruct_value] = random(60, 100);
-            }
+            obstruct[1].delay = random(0, 2000);
+            obstruct[1].height = random(40, 80);
+            obstruct[1].posi = 0;
+            obstruct[1].start_time = xTaskGetTickCount();
         }
+        if (obstruct[0].posi > 240)
+        {
+            obstruct[0].enable = 0;
+            obstruct[0].posi = 0;
+            obstruct[0].start_time = 0;
+        }
+        if (xTaskGetTickCount() - obstruct[1].start_time >= obstruct[1].delay || obstruct[1].enable == 1)
+        {
+            obstruct[1].posi+=2;
+            obstruct[1].enable = 1;
+        }
+        if (obstruct[1].posi > 200 && obstruct[0].start_time == 0)
+        {
+            obstruct[0].delay = random(0, 2000);
+            obstruct[0].height = random(20, 40);
+            obstruct[0].start_time = xTaskGetTickCount();
+        }
+        if (obstruct[1].posi > 240)
+        {
+            obstruct[1].enable = 0;
+            obstruct[1].posi = 0;
+            obstruct[1].start_time = 0;
+        }
+
+        if (obstruct[0].enable == 1)
+        {
+            m5.Lcd.drawLine(100-obstruct[0].height, obstruct[0].posi, 100, obstruct[0].posi, PINK);
+            m5.Lcd.drawLine(100-obstruct[0].height, obstruct[0].posi - 1, 100, obstruct[0].posi - 1, BLACK);
+        }
+    if(obstruct[1].enable == 1)
+    {
+                m5.Lcd.drawLine(100-obstruct[1].height, obstruct[1].posi, 100, obstruct[1].posi, PINK);
+        m5.Lcd.drawLine(100-obstruct[1].height, obstruct[1].posi - 1, 100, obstruct[1].posi - 1, BLACK);
+    }
 
         vTaskDelay(30);
     }
@@ -60,7 +85,7 @@ void show_ball(void *point)
 {
     // x= v0t+1/2at^2
     int8_t message = 0;
-    uint8_t movement = 0;//动作标志位
+    uint8_t movement = 0;      //动作标志位
     TickType_t start_time = 0; //开始物理学计算的起始时间
     for (;;)
     {
@@ -84,20 +109,10 @@ void show_ball(void *point)
         }
         if (movement == 'U')
         {
-            m5.Lcd.drawCircle(gravity_movement[start_time], 200, 10, RED);
-            m5.Lcd.drawCircle(gravity_movement[start_time - 1], 200, 10, BLACK);
+            m5.Lcd.drawCircle(100 - gravity_movement[start_time - 1], 200, 10, BLACK);
+            m5.Lcd.drawCircle(100 - gravity_movement[start_time], 200, 10, RED);
             start_time++;
-            if (start_time > 6)
-            {
-                movement = 0;
-            }
-        }
-        if (movement == 'D')
-        {
-            m5.Lcd.drawCircle(gravity_movement[start_time], 200, 10, RED);
-            m5.Lcd.drawCircle(gravity_movement[start_time+1], 200, 10, BLACK);
-            start_time--;
-            if (start_time <=0)
+            if (start_time > 20)
             {
                 movement = 0;
             }
@@ -108,5 +123,6 @@ void show_ball(void *point)
 }
 void ball_fall_timer_callback(TimerHandle_t xtimer)
 {
-    
+    uint8_t data_send = 'R';
+    xQueueSend(IMU_Btn_Queue, &data_send, 10);
 }

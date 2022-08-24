@@ -14,4 +14,5 @@
 
 extern QueueHandle_t IMU_Btn_Queue;//创建一个队列,长度4，大小20
 extern EventGroupHandle_t obstruct_refresh_event; //创建重新刷新障碍物事件组
+extern TaskHandle_t oled_show_handle,show_ball_handle;
 #endif

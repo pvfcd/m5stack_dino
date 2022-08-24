@@ -7,7 +7,7 @@ obstruct_typedef obstruct[2];
 
 static uint8_t gravity_movement[] = {19, 19, 36, 51, 64, 75, 84, 91, 96, 99, 100, 99, 96, 91, 84, 75, 64, 51, 36, 19, 19}; //符合重力加速度的运动轨迹
 
-crush_detect_typedef crush_detect; //碰撞检测有关变量
+crush_detect_typedef obst_posi; //碰撞检测有关变量
 /**
  * @brief 刷新显示屏线程
  *
@@ -24,47 +24,51 @@ void Show_Oled(void *point)
     for (;;)
     {
         //障碍物移动
-        if(obstruct[0].enable == 1 )
+        if (obstruct[0].enable == 1)
         {
 
-            Serial.printf("Obs0posi = %d,hei = %d\n",obstruct[0].posi,obstruct[0].height);
-            m5.Lcd.drawLine(tft_x-30,obstruct[0].posi-speed-obstruct[0].delay,tft_x-obstruct[0].height,obstruct[0].posi-speed-obstruct[0].delay,BLACK);
-           m5.Lcd.drawLine(tft_x-30,obstruct[0].posi-obstruct[0].delay,tft_x-obstruct[0].height,obstruct[0].posi-obstruct[0].delay,PINK);
-           
-           obstruct[0].posi += speed;  
+            // Serial.printf("Obs0posi = %d,hei = %d\n", obstruct[0].posi, obstruct[0].height);
+            obst_posi.obstruct_posi = obstruct[0].posi - obstruct[0].delay;
+            obst_posi.obstruct_height = obstruct[0].height - 30;
+            m5.Lcd.drawLine(tft_x - 30, obstruct[0].posi - speed - obstruct[0].delay, tft_x - obstruct[0].height, obstruct[0].posi - speed - obstruct[0].delay, BLACK);
+            m5.Lcd.drawLine(tft_x - 30, obstruct[0].posi - obstruct[0].delay, tft_x - obstruct[0].height, obstruct[0].posi - obstruct[0].delay, PINK);
 
-           if(obstruct[0].posi-obstruct[0].delay > 240)
-           {
-            obstruct[0].posi = 0;
-            obstruct[0].enable = 0;
-            xEventGroupSetBits(obstruct_refresh_event,0x1<<1);
-            xEventGroupSetBits(obstruct_refresh_event,0x1<<0);
-           }
+            obstruct[0].posi += speed;
+
+            if (obstruct[0].posi - obstruct[0].delay > 240)
+            {
+                obstruct[0].posi = 0;
+                obstruct[0].enable = 0;
+                xEventGroupSetBits(obstruct_refresh_event, 0x1 << 1);
+                xEventGroupSetBits(obstruct_refresh_event, 0x1 << 0);
+            }
         }
-        if(obstruct[1].enable == 1 )
+        if (obstruct[1].enable == 1)
         {
 
-            Serial.printf("Obs1posi = %d,hei = %d\n",obstruct[1].posi,obstruct[1].height);
-           m5.Lcd.drawLine(tft_x-30,obstruct[1].posi-speed-obstruct[1].delay,tft_x-obstruct[1].height,obstruct[1].posi-speed-obstruct[1].delay,BLACK);
-           m5.Lcd.drawLine(tft_x-30,obstruct[1].posi-obstruct[1].delay,tft_x-obstruct[1].height,obstruct[1].posi-obstruct[1].delay,PINK);
+            // Serial.printf("Obs1posi = %d,hei = %d\n", obstruct[1].posi, obstruct[1].height);
+            obst_posi.obstruct_posi = obstruct[1].posi - obstruct[1].delay;
+            obst_posi.obstruct_height = obstruct[1].height - 30;
+            m5.Lcd.drawLine(tft_x - 30, obstruct[1].posi - speed - obstruct[1].delay, tft_x - obstruct[1].height, obstruct[1].posi - speed - obstruct[1].delay, BLACK);
+            m5.Lcd.drawLine(tft_x - 30, obstruct[1].posi - obstruct[1].delay, tft_x - obstruct[1].height, obstruct[1].posi - obstruct[1].delay, PINK);
 
-           obstruct[1].posi += speed;  
+            obstruct[1].posi += speed;
 
-           if(obstruct[1].posi-obstruct[1].delay > 240)
-           {
-            obstruct[1].posi = 0;
-            obstruct[1].enable = 0;
-            xEventGroupSetBits(obstruct_refresh_event,0x1<<2);
-            xEventGroupSetBits(obstruct_refresh_event,0x1<<0);
-           }
-        }   
+            if (obstruct[1].posi - obstruct[1].delay > 240)
+            {
+                obstruct[1].posi = 0;
+                obstruct[1].enable = 0;
+                xEventGroupSetBits(obstruct_refresh_event, 0x1 << 2);
+                xEventGroupSetBits(obstruct_refresh_event, 0x1 << 0);
+            }
+        }
         vTaskDelay(30);
     }
 }
 /**
  * @brief 刷新球线程
- * 
- * @param point 
+ *
+ * @param point
  */
 void show_ball(void *point)
 {
@@ -96,6 +100,7 @@ void show_ball(void *point)
             {
                 movement = 0;
             }
+            obst_posi.ball_posi = gravity_movement[start_time];
         }
 
         vTaskDelay(10);
@@ -103,44 +108,96 @@ void show_ball(void *point)
 }
 /**
  * @brief 随机生成障碍物
- * 
- * @param point 
+ *
+ * @param point
  */
 void obstruct_calib(void *point)
 {
-    EventBits_t obstruct_bit;//存储读取的事件组
-    for(;;)
+    EventBits_t obstruct_bit; //存储读取的事件组
+    for (;;)
     {
         obstruct_bit = xEventGroupWaitBits(obstruct_refresh_event, // Event Group Handler
-                                           0x1,              //等待1位
+                                           0x1,                    //等待1位
                                            pdFALSE,                //执行后，对应的Bits是否重置为 0
                                            pdTRUE,                 //等待的Bits判断关系 True为 AND, False为 OR
                                            portMAX_DELAY);         //一直等待
-        printf("obstruct_event = %x\n",obstruct_bit);
-        if(obstruct_bit&0x1<<1)
+        printf("obstruct_event = %x\n", obstruct_bit);
+        if (obstruct_bit & 0x1 << 1)
         {
-            obstruct[1].delay = random(40,80);
+            obstruct[1].delay = random(40, 80);
             obstruct[1].height = random(50, 100); //高度自定义
             obstruct[1].posi = 0;
             obstruct[1].enable = 1;
         }
-        if(obstruct_bit&0x1<<2)
+        if (obstruct_bit & 0x1 << 2)
         {
-            obstruct[0].delay = random(40,80);
+            obstruct[0].delay = random(40, 80);
             obstruct[0].height = random(50, 100); //高度自定义
             obstruct[0].posi = 0;
             obstruct[0].enable = 1;
         }
-        xEventGroupClearBits(obstruct_refresh_event,ALLBITS);
+        xEventGroupClearBits(obstruct_refresh_event, ALLBITS);
     }
 }
 /**
- * @brief 
- * 
- * @param xtimer 
+ * @brief 碰撞检测
+ *
+ * @param point
  */
-void ball_fall_timer_callback(TimerHandle_t xtimer)
+void crush_detect(void *point)
 {
-    uint8_t data_send = 'R';
-    xQueueSend(IMU_Btn_Queue, &data_send, 10);
+    uint8_t message = 0;
+    for (;;)
+    {
+
+        Serial.printf("ball_posi = %d,obsposi = %d,obsheight= %d\n", obst_posi.ball_posi, obst_posi.obstruct_posi, obst_posi.obstruct_height);
+        if (obst_posi.obstruct_height > obst_posi.ball_posi && (195 < obst_posi.obstruct_posi && obst_posi.obstruct_posi < 205))
+        {
+
+            if (oled_show_handle != NULL)
+            {
+                vTaskSuspend(oled_show_handle);
+                oled_show_handle = NULL;
+            }
+            if (show_ball_handle != NULL)
+            {
+                vTaskSuspend(show_ball_handle);
+                show_ball_handle = NULL;
+            }
+            Serial.printf("stop!");
+            if (xQueueReceive(IMU_Btn_Queue, &message, 10) == pdPASS)
+            {
+                if (message == 'U')
+                {
+                    abort();
+                }
+            }
+        }
+        if (obst_posi.ball_posi == 77)
+        {
+            Serial.printf("ballposi = 77");
+            if (195 < obst_posi.obstruct_posi && obst_posi.obstruct_posi < 205)
+            {
+                if (oled_show_handle != NULL)
+                {
+                    vTaskSuspend(oled_show_handle);
+                    oled_show_handle = NULL;
+                }
+                if (show_ball_handle != NULL)
+                {
+                    vTaskSuspend(show_ball_handle);
+                    show_ball_handle = NULL;
+                }
+                Serial.printf("stop!");
+                if (xQueueReceive(IMU_Btn_Queue, &message, 10) == pdPASS)
+                {
+                    if (message == 'U')
+                    {
+                        abort();
+                    }
+                }
+            }
+        }
+        vTaskDelay(20);
+    }
 }

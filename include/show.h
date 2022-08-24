@@ -5,9 +5,11 @@ void Show_Oled(void *point);
 void show_ball(void *point);
 void ball_fall_timer_callback(TimerHandle_t xtimer);
 void obstruct_calib(void *point);
+void crush_detect(void *point);
 typedef struct
 {
-    uint8_t obstruct_posi;
+    uint16_t obstruct_posi;
+    uint8_t obstruct_height;
     uint8_t ball_posi;
 } crush_detect_typedef;
 typedef struct

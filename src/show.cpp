@@ -1,7 +1,7 @@
 #include "show.h"
 #include "stdlib.h"
 #include "math.h"
-
+#include "string.h"
 #define speed 4
 obstruct_typedef obstruct[2];
 
@@ -35,7 +35,7 @@ void Show_Oled(void *point)
 
             obstruct[0].posi += speed;
 
-            if (obstruct[0].posi - obstruct[0].delay > 240)
+            if (obstruct[0].posi - obstruct[0].delay > 245)
             {
                 obstruct[0].posi = 0;
                 obstruct[0].enable = 0;
@@ -54,7 +54,7 @@ void Show_Oled(void *point)
 
             obstruct[1].posi += speed;
 
-            if (obstruct[1].posi - obstruct[1].delay > 240)
+            if (obstruct[1].posi - obstruct[1].delay > 245)
             {
                 obstruct[1].posi = 0;
                 obstruct[1].enable = 0;
@@ -62,6 +62,7 @@ void Show_Oled(void *point)
                 xEventGroupSetBits(obstruct_refresh_event, 0x1 << 0);
             }
         }
+        // m5.Lcd.fillRect(100,10,40,50,YELLOW);//修正残影
         vTaskDelay(30);
     }
 }
@@ -147,37 +148,15 @@ void obstruct_calib(void *point)
 void crush_detect(void *point)
 {
     uint8_t message = 0;
+    uint8_t score = 0;
     for (;;)
     {
-
-        Serial.printf("ball_posi = %d,obsposi = %d,obsheight= %d\n", obst_posi.ball_posi, obst_posi.obstruct_posi, obst_posi.obstruct_height);
-        if (obst_posi.obstruct_height > obst_posi.ball_posi && (195 < obst_posi.obstruct_posi && obst_posi.obstruct_posi < 205))
+        // Serial.printf("ball_posi = %d,obsposi = %d,obsheight= %d\n", obst_posi.ball_posi, obst_posi.obstruct_posi, obst_posi.obstruct_height);
+        if (195 < obst_posi.obstruct_posi && obst_posi.obstruct_posi < 205)
         {
+            if (obst_posi.obstruct_height > obst_posi.ball_posi)
+            {
 
-            if (oled_show_handle != NULL)
-            {
-                vTaskSuspend(oled_show_handle);
-                oled_show_handle = NULL;
-            }
-            if (show_ball_handle != NULL)
-            {
-                vTaskSuspend(show_ball_handle);
-                show_ball_handle = NULL;
-            }
-            Serial.printf("stop!");
-            if (xQueueReceive(IMU_Btn_Queue, &message, 10) == pdPASS)
-            {
-                if (message == 'U')
-                {
-                    abort();
-                }
-            }
-        }
-        if (obst_posi.ball_posi == 77)
-        {
-            Serial.printf("ballposi = 77");
-            if (195 < obst_posi.obstruct_posi && obst_posi.obstruct_posi < 205)
-            {
                 if (oled_show_handle != NULL)
                 {
                     vTaskSuspend(oled_show_handle);
@@ -188,16 +167,45 @@ void crush_detect(void *point)
                     vTaskSuspend(show_ball_handle);
                     show_ball_handle = NULL;
                 }
-                Serial.printf("stop!");
-                if (xQueueReceive(IMU_Btn_Queue, &message, 10) == pdPASS)
+                // Serial.printf("stop!");
+            }
+            if (obst_posi.ball_posi == 77)
+            {
+                // Serial.printf("ballposi = 77");
+                if (oled_show_handle != NULL)
                 {
-                    if (message == 'U')
-                    {
-                        abort();
-                    }
+                    vTaskSuspend(oled_show_handle);
+                    oled_show_handle = NULL;
+                }
+                if (show_ball_handle != NULL)
+                {
+                    vTaskSuspend(show_ball_handle);
+                    show_ball_handle = NULL;
+                }
+                // Serial.printf("stop!");
+            }
+            
+        }
+        if (oled_show_handle == NULL)
+        {
+            if (xQueueReceive(IMU_Btn_Queue, &message, 10) == pdPASS)
+            {
+                if (message == 'U')
+                {
+                    abort();
                 }
             }
         }
+        else//计分器
+        {
+            if(196< obst_posi.obstruct_posi && obst_posi.obstruct_posi < 207)
+            {
+                score++;
+            }
+        }
+        Serial.printf("score=%d",score/speed);
+        // sprintf(score_buf,"%d",score);
+        // m5.Lcd.drawRect(0,240,135,236,YELLOW);//修正残影
         vTaskDelay(20);
     }
 }

@@ -10,7 +10,8 @@
 
 #define tft_x 135
 #define tft_y 240
+#define ALLBITS 0xFFFFFF //24bits都是1
 
 extern QueueHandle_t IMU_Btn_Queue;//创建一个队列,长度4，大小20
-extern TimerHandle_t ball_down_timer;
+extern EventGroupHandle_t obstruct_refresh_event; //创建重新刷新障碍物事件组
 #endif

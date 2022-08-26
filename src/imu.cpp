@@ -9,7 +9,7 @@ IMU_data_Typedef acceldata, gyrodata;
  */
 void IMU_ReadPin(void *point)
 {
-    if (m5.Imu.Init() != 0)
+    if (m5.Imu.Init() != 0)//初始化陀螺仪
     {
         while (1)
         {
@@ -23,23 +23,19 @@ void IMU_ReadPin(void *point)
         message = 'E';
         if(acceldata.x > rate)
         {
-            // Serial.printf("up\n");
             message = 'U';
         }
         if(acceldata.x < -rate)
         {
-            // Serial.printf("down\n");
             message = 'D';
         }
         if(acceldata.z > rate)
         {
-            // Serial.printf("left\n");
             message = 'L';
         }
         if(acceldata.z < -rate)
         {
-            // Serial.printf("right\n");
-            // message = 'R';
+            message = 'R';
         }
         // Serial.printf("{acceldatax:%f},{acceldatay:%f},{acceldataz:%f}",acceldata.x,acceldata.y,acceldata.z);
         if(message != 'E')

@@ -167,25 +167,11 @@ void crush_detect(void *point)
                 }
                 // Serial.printf("stop!");
             }
-            if (obst_posi.ball_posi == 77)
-            {
-                // Serial.printf("ballposi = 77");
-                if (oled_show_handle != NULL)
-                {
-                    vTaskSuspend(oled_show_handle);
-                    oled_show_handle = NULL;
-                }
-                if (show_ball_handle != NULL)
-                {
-                    vTaskSuspend(show_ball_handle);
-                    show_ball_handle = NULL;
-                }
-                // Serial.printf("stop!");
-            }
             
         }
         if (oled_show_handle == NULL)
         {
+            m5.Lcd.drawBitmap(0,0,135,240,end);
             if (xQueueReceive(IMU_Btn_Queue, &message, 10) == pdPASS)
             {
                 if (message == 'U')

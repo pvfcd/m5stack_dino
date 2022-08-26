@@ -11,14 +11,13 @@ void setup()
 {
       // put your setup code here, to run once:
     m5.begin();
+    m5.Axp.ScreenBreath(9);
     m5.Lcd.fillScreen(WHITE);//底色为白色
     // m5.Lcd.drawBitmap(0,0,50,45,dino1);
-    
-    xTaskCreatePinnedToCore(crush_detect,"crush_detect",1024*6,NULL,4,NULL,0);//碰撞检测
     xTaskCreatePinnedToCore(IMU_ReadPin,"read_pin",4096,NULL,5,NULL,0);//陀螺仪检测
     xTaskCreatePinnedToCore(Show_Oled,"oled_show",1024*10,NULL,1,&oled_show_handle,1);//使用CPU1刷屏
     xTaskCreatePinnedToCore(show_ball,"show_ball",1024*5,NULL,6,&show_ball_handle,1);//刷新移动球
-    // xTaskCreatePinnedToCore(obstruct_calib,"obstruct_calib",1024*4,NULL,3,NULL,1);//随机数生成放在CPU1
+    xTaskCreatePinnedToCore(crush_detect,"crush_detect",1024*6,NULL,4,NULL,0);//碰撞检测 
     obstruct_refresh_event = xEventGroupCreate();//创建事件组
     pinMode(10, OUTPUT);    //初始化灯
     pinMode(37,INPUT_PULLUP);

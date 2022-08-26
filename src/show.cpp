@@ -3,13 +3,20 @@
 #include "math.h"
 #include "string.h"
 #include "pic.h"
-#define speed 4
+#define speed 4 // 速度
 obstruct_typedef obstruct[2];
 
 static uint8_t gravity_movement[] = {19, 19, 36, 51, 64, 75, 84, 91, 96, 99, 100, 99, 96, 91, 84, 75, 64, 51, 36, 19, 19}; //符合重力加速度的运动轨迹
 
 crush_detect_typedef obst_posi; //碰撞检测有关变量
-
+/**
+ * @brief 画小恐龙
+ * 
+ * @param x x位置
+ * @param y y位置
+ * @param last_x 上次x位置
+ * @param last_y 上次y位置
+ */
 void show_dino(uint16_t x,uint16_t y,uint16_t last_x,uint16_t last_y)
 {
     if(x-last_x > 0)
@@ -79,7 +86,7 @@ void Show_Oled(void *point)
                 obstruct[0].posi = 0;
                 obstruct[0].enable = 1;
                 obstruct[0].height = random(1,3);
-                Serial.printf("h = %d",obstruct[0].height);
+                // Serial.printf("h = %d",obstruct[0].height);
             }
         }
         vTaskDelay(30);
@@ -169,6 +176,7 @@ void crush_detect(void *point)
             }
             
         }
+        //检测到碰撞后
         if (oled_show_handle == NULL)
         {
             m5.Lcd.drawBitmap(0,0,135,240,end);
